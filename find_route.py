@@ -37,7 +37,10 @@ def uc_search(graph: nx.Graph, start: str, goal: str):
         'route': [],
         'cost': float('inf'),
     }
-    reached = {}
+    if start == goal:
+        return 0, [{'from': start, 'to': goal, 'distance': 0}]
+
+    reached = {start: {'cost': 0}}
     frontier = queue.PriorityQueue()
     frontier.put((0, start))
 
@@ -57,12 +60,14 @@ def uc_search(graph: nx.Graph, start: str, goal: str):
         else:
             parent = frontier.get()
 
+    max_loop = 1000
+    loop = 0
     backtrack_node = goal
-    while graph.nodes[backtrack_node].get('predecessor'):
+    while loop < max_loop and graph.nodes[backtrack_node].get('predecessor'):
         pred = graph.nodes[backtrack_node].get('predecessor')
-        print(pred)
-        result['route'].append(pred)
+        result['route'].insert(0, {'from': pred, 'to': backtrack_node, 'distance': graph[pred][backtrack_node]['distance']})
         backtrack_node = pred
+        loop += 1
 
     return result['cost'], result['route']
 
@@ -85,12 +90,13 @@ def main():
     cost, route = uc_search(graph, start, goal)
 
     # print(result)
-    print(f'distance: {"infinity" if cost == float("inf") else cost}')
+    print(f'distance: {"infinity" if cost == float("inf") else str(int(cost)) + " km"}')
     print('route:')
     if not route:
         print('none')
     else:
-        print(route)
+        for step in route:
+            print(f'{step["from"]} to {step["to"]}, {int(step["distance"])} km')
 
 
 if __name__ == '__main__':
