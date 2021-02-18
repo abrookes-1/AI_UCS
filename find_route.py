@@ -1,4 +1,4 @@
-import sys, copy
+import sys, copy, queue
 import networkx as nx
 
 
@@ -13,10 +13,11 @@ import networkx as nx
 #             return
 #         uc_step(graph, result, to)
 
-def uc_step(graph: nx.Graph, )
+# def uc_step(graph: nx.Graph, result, start, goal, cost):
+#     for
 
 
-def uc_search(graph, start: str, goal: str):
+def uc_search(graph: nx.Graph, start: str, goal: str):
     """
     Uninformed search implementation for searching a graph
     :param graph:
@@ -33,12 +34,37 @@ def uc_search(graph, start: str, goal: str):
     """
     # TODO: infinite distance for loop
     result = {
-        'route': []
+        'route': [],
+        'cost': float('inf'),
     }
+    reached = {}
+    frontier = queue.PriorityQueue()
+    frontier.put((0, start))
 
-    uc_step(graph, result, start, goal)
+    parent = frontier.get()
+    while parent is not None and parent[0] < result['cost']:
+        for child in graph.neighbors(parent[1]):
+            cost = parent[0] + graph.get_edge_data(parent[1], child)['distance']
+            if child not in reached.keys() or cost < reached[child]['cost']:
+                reached[child] = {'cost': cost, 'route': None}
+                frontier.put((cost, child))
+                graph.nodes[child]['predecessor'] = parent[1]
+                if child == goal and cost <= reached[child]['cost']:
+                    result['cost'] = cost
 
-    return result
+        if frontier.empty():
+            parent = None
+        else:
+            parent = frontier.get()
+
+    backtrack_node = goal
+    while graph.nodes[backtrack_node].get('predecessor'):
+        pred = graph.nodes[backtrack_node].get('predecessor')
+        print(pred)
+        result['route'].append(pred)
+        backtrack_node = pred
+
+    return result['cost'], result['route']
 
 
 def main():
@@ -56,16 +82,15 @@ def main():
             line = edges.readline()[0:-1]
 
     # call pathfinding function
-    result = uc_search(graph, start, goal)
+    cost, route = uc_search(graph, start, goal)
 
-    # print results
-    # print(f'distance: {"infinity" if result["distance"] == float("inf") else result["distance"]}')
-    # print('route:')
-    # if result['route'] is None:
-    #     print('none')
-    # else:
-    #     for link in result['route']:
-    #         print(f'{link["from"]} to {link["to"]}, {link["distance"]} km')
+    # print(result)
+    print(f'distance: {"infinity" if cost == float("inf") else cost}')
+    print('route:')
+    if not route:
+        print('none')
+    else:
+        print(route)
 
 
 if __name__ == '__main__':
